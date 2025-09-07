@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Casper the AI</title>
+  <link rel="manifest" href="public_manifest.json">
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: #000;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+    #chat-container {
+      width: 90%;
+      max-width: 600px;
+      height: 70%;
+      border: 2px solid #fff;
+      padding: 10px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      background-color: #111;
+    }
+    #chat-container div {
+      padding: 5px;
+      border-radius: 5px;
+      word-wrap: break-word;
+    }
+    .user-message { background-color: #1a73e8; color: #fff; align-self: flex-end; }
+    .ai-message { background-color: #e91e63; color: #fff; align-self: flex-start; }
+    #input-container {
+      margin-top: 10px;
+      width: 90%;
+      max-width: 600px;
+      display: flex;
+      gap: 5px;
+    }
+    #message {
+      flex: 1;
+      padding: 10px;
+      font-size: 16px;
+      border-radius: 5px;
+      border: none;
+    }
+    #send-btn {
+      padding: 10px 15px;
+      font-size: 16px;
+      border: none;
+      border-radius: 5px;
+      background-color: #1a73e8;
+      color: #fff;
+      cursor: pointer;
+    }
+    #send-btn:hover { background-color: #155ab6; }
+  </style>
+</head>
+<body>
+  <h1>Casper the AI</h1>
+  <div id="chat-container"></div>
+  <div id="input-container">
+    <input type="text" id="message" placeholder="Type your message here..." autofocus>
+    <button id="send-btn">Send</button>
+  </div>
+
+  <script src="public_ai-visual.js"></script>
+  <script>
+    const ws = new WebSocket(`ws://${location.host}`);
+    const chatContainer = document.getElementById('chat-container');
+    const input = document.getElementById('message');
+    const sendBtn = document.getElementById('send-btn');
+
+    function addMessage(sender, text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      div.className = sender === 'user' ? 'user-message' : 'ai-message';
+      chatContainer.appendChild(div);
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
+
+    ws.onopen = () => {
+      console.log('[WebSocket] Connected');
+    };
+
+    ws.onmessage = (msg) => {
+      addMessage('ai', msg.data);
+    };
+
+    function sendMessage() {
+      if (!input.value.trim()) return;
+      addMessage('user', input.value);
+      ws.send(input.value);
+      input.value = '';
+    }
+
+    sendBtn.addEventListener('click', sendMessage);
+    input.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') sendMessage();
+    });
+  </script>
+</body>
+</html>
